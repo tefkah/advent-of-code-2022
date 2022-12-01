@@ -13,28 +13,67 @@ fn main() {
     println!("Reading file: {}", file_path);
 
     let contents = read_file(file_path);
-    let [largest, last, elf] = &contents.lines().fold([0, 0, 0], |acc, line| {
-        let [mut largest, mut curr, mut elf_index] = acc;
+    let (top3, last) = &contents.lines().fold(
+        (
+            [
+                Elf {
+                    index: 0,
+                    calories: 0,
+                },
+                Elf {
+                    index: 0,
+                    calories: 0,
+                },
+                Elf {
+                    index: 0,
+                    calories: 0,
+                },
+            ],
+            Elf {
+                index: 0,
+                calories: 0,
+            },
+        ),
+        |acc, line| -> ([Elf; 3], Elf) {
+            let (mut top3, mut curr) = acc;
 
-        if line == "" {
-            elf_index += 1;
-            if curr > largest {
-                largest = curr;
+            if line == "" {
+                curr.index += 1;
+
+                top3 = if top3.iter().any(|elf| curr.calories > elf.calories) {
+                    [top3[0], top3[1], curr]
+                } else {
+                    top3
+                };
+
+                top3.sort_by(|a, b| b.calories.cmp(&a.calories));
+
+                curr = Elf {
+                    index: curr.index,
+                    calories: 0,
+                };
+
+                return (top3, curr);
             }
-            curr = 0;
-            return [largest, curr, elf_index];
-        }
 
-        let line_val = line.parse::<i32>();
+            let line_val = line.parse::<i32>();
 
-        if line_val.is_ok() {
-            curr += line_val.unwrap();
-        }
+            if line_val.is_ok() {
+                curr.calories += line_val.unwrap();
+            }
 
-        return [largest, curr, elf_index];
-    });
+            return (top3, curr);
+        },
+    );
 
-    println!("Elf {elf} is carrying {largest} calories, get him!");
+    let sumOfCalories = top3.iter().fold(0, |acc, elf| acc + elf.calories);
+
+    println!(
+        "The top 3 elves carried this many calories: {}",
+        sumOfCalories
+    );
+    println!("This were the elves: {:?}", top3);
+
     // dbg!(args);
 }
 
@@ -44,4 +83,10 @@ fn read_file(file_path: &str) -> String {
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
 
     format!("{contents}\n")
+}
+
+#[derive(Debug, Copy, Clone)]
+struct Elf {
+    index: i32,
+    calories: i32,
 }
