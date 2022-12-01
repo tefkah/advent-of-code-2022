@@ -4,7 +4,13 @@ use std::fs;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let file_path: &str = &args[1];
+    let file_path = if args.len() > 1 {
+        &args[1]
+    } else {
+        "input.txt"
+    };
+
+    println!("Reading file: {}", file_path);
 
     let contents = read_file(file_path);
     let [largest, last, elf] = &contents.lines().fold([0, 0, 0], |acc, line| {
@@ -38,9 +44,4 @@ fn read_file(file_path: &str) -> String {
     let contents = fs::read_to_string(file_path).expect("Should have been able to read the file");
 
     format!("{contents}\n")
-}
-
-struct Elf {
-    food: Vec<usize>,
-    index: usize,
 }
